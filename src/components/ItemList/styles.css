@@ -1,0 +1,30 @@
+.item-list {  
+  border-radius: 15px;
+  cursor: pointer; 
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+  background-color: rgb(241, 240, 240);
+}
+
+.item-list:hover {  
+  background-color: rgb(214, 213, 213);
+}
+
+.item-text {  
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.description {  
+ text-align: center;
+ font-size: 22px;
+ text-transform: capitalize;
+}
+
+.action {  
+   color: brown;
+  text-align: center;
+  font-size: 16px;
+}
