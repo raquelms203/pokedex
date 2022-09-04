@@ -1,7 +1,7 @@
-import { legacy_createStore as createStore } from "redux";
+import { configureStore } from "@reduxjs/toolkit";
+import pokemonReducer  from "./pokemon/reducer";
 
-import rootReducer from "./rootReducer";
 
-const store = createStore(rootReducer);
-
-export default store;
+export default configureStore({
+  reducer: {pokemon: pokemonReducer},
+});

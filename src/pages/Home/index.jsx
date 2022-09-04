@@ -1,54 +1,78 @@
 import React, { useCallback, useEffect, useState } from "react";
-import ItemList from "../../components/ItemList";
-import { GrPrevious,  GrNext } from "react-icons/gr";
-
-import api from "../../services/api";
-import "./styles.css";
+import { GrPrevious, GrNext } from "react-icons/gr";
+import { useNavigate} from "react-router-dom";
 import axios from "axios";
 
+import ItemList from "../../components/ItemList";
+import api from "../../services/api";
+import "./styles.css";
+import { useDispatch } from "react-redux";
+import { select } from "../../store/pokemon/reducer";
+
 const Home = () => {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [listPokemons, setListPokemons] = useState([]);
   const [page, setPage] = useState({});
+  const [index, setIndex] = useState(1);
 
   const fetchPokemons = useCallback(async () => {
     try {
       let { data } = await api.get("/pokemon");
       setListPokemons(data.results);
-      setPage({ previous: data.previous,  next: data.next, count: data.count });    
+      setPage({ previous: data.previous, next: data.next, count: data.count });
     } catch (e) {
-      alert("Ocorreu um erro ao carregar dados");
+      alert("An error occurred");
     }
   }, [setListPokemons, setPage]);
 
+  const getUrlFromType = useCallback((type) => {  
+    let url;
+     if (type === "next") {
+       if (page.next) {
+         url = page.next;
+         setIndex(index + 1);
+       }
+     } else if (type === "previous")
+       if (page.previous && index > 1) {
+         url = page.next;
+         setIndex(index - 1);
+       }
+
+    return url;
+  }, [page, index, setIndex])
+
   const changePageList = useCallback(
     async (type) => {
-      console.log(JSON.stringify(page))
-
-      let url;
-      if (type === "next") url = page?.next;
-      else if (type === "previous") url = page?.previous;
-
-      if (!url) return;
-
-      const axiosUrl = axios.create({
-        baseURL: url,
-      });
+      let url = getUrlFromType(type);
+      if(!url) return;
 
       try {
-        let { data } = await axiosUrl.get("");
+        let { data } = await axios({
+          method: "get",
+          url,
+        });
         setListPokemons(data.results);
-      setPage({
-        previous: data.previous,
-        next: data.next,
-        count: data.count,
-      });    
+        setPage({
+          previous: data.previous,
+          next: data.next,
+          count: data.count,
+        });
       } catch (e) {
-
-        alert(e);
+        alert("An error occurred");
       }
     },
-    [setListPokemons, setPage, page]
+    [setListPokemons, setPage, getUrlFromType]
   );
+
+  const handleItemClick = (async (url) => {  
+     let { data } = await axios({
+          method: "get",
+          url,
+        });
+    dispatch(select(data));
+    navigate("/pokemon")
+  })
 
   useEffect(() => {
     fetchPokemons();
@@ -61,21 +85,20 @@ const Home = () => {
           <ItemList
             key={index}
             description={item.name}
-            onClick={() => {}}
+            onClick={()=> handleItemClick(item.url)}
           ></ItemList>
         ))}
       </div>
-        <div className="pagination">
-          <GrPrevious 
-            onClick={() => changePageList("previous")}
-          />
-          Total Itens: {page.count}
-          <GrNext
-            onClick={() => changePageList("next")}
-          />
-        </div>
+      <pre className="pagination">
+        <GrPrevious onClick={() => changePageList("previous")} />
+        Page: {index}{"\n"}
+        Total Itens: {page.count}
+        <GrNext onClick={() => changePageList("next")} />
+      </pre>
     </>
   );
 };
 
+
 export default Home;
+
